@@ -31,15 +31,15 @@ endpoints and features
 │   ├── infrastructure.module.ts<br />
 │   ├── logging.ts<br />
 │   └── redis.ts<br />
-├── queries
-│   ├── flight
+├── queries<br />
+│   ├── flight<br />
 │   │   ├── flight-query-handler.ts<br />
 │   │   └── flight-query.ts<br />
 │   └── queries.module.ts<br />
 ├── rest<br />
 │   ├── flight-controller.ts<br />
 │   └── rest.module.ts<br />
-└── tasks
+└── tasks<br />
     ├── flight-interval.service.ts<br />
     └── tasks.module.ts<br />
 
