@@ -38,7 +38,7 @@ export abstract class FlightService {
     );
 
     const response = await retry(
-      { times: 3, delay: 1000 },
+      { times: 5, delay: 1000 },
       () => flightPromise,
     );
 

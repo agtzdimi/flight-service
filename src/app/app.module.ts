@@ -9,6 +9,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from './tasks/tasks.module';
 import * as redisStore from 'cache-manager-redis-store';
 import type { ClientOpts } from 'redis';
+import { InfrastructureModule } from './infrastructure/infrastructure.module';
 
 const winstonFactory = async (
   configService: ConfigService,
@@ -43,6 +44,7 @@ const winstonFactory = async (
     ScheduleModule.forRoot(),
     RestModule,
     TasksModule,
+    InfrastructureModule,
   ],
 })
 export class AppModule {}

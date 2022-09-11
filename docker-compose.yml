@@ -1,26 +1,27 @@
 services:
-  api:
-    depends_on:
-      - redis
+  main:
+    container_name: main
     build:
-      dockerfile: Dockerfile
       context: .
-      # Only will build development stage from our dockerfile
       target: development
     volumes:
       - .:/usr/src/app
-    env_file:
-    - .env
-    # Run a command against the development stage of the image
-    command: npm run start:dev
+      - /usr/src/app/node_modules
     ports:
       - 3310:3310
-  redis: # Name of container
-    image: redis
+    command: yarn start:dev
+    links:
+      - redis
+    env_file:
+      - .env
+    networks:
+      - webnet
+  redis:
+    image: 'redis:alpine'
     ports:
       - 6379:6379
-    volumes:
-      - redis:/data
-volumes:
-  redis:
-    driver: local
+    networks:
+      - webnet
+
+networks:
+  webnet:
