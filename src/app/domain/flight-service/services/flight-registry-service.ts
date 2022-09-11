@@ -6,11 +6,11 @@ import { FlightService } from '../flight-service.abstract';
 @Injectable()
 export class FlightRegistryService {
   constructor(
-    public firstFlightService: FirstFlightService,
-    public secondFlightService: SecondFlightService,
+    private _firstFlightService: FirstFlightService,
+    private _secondFlightService: SecondFlightService,
   ) {}
 
   getServices(): FlightService[] {
-    return [this.firstFlightService, this.secondFlightService];
+    return [this._firstFlightService, this._secondFlightService];
   }
 }

@@ -7,7 +7,7 @@ import {
 import { FlightResponseValidator } from './flight-response-validator';
 import { firstValueFrom, catchError, of } from 'rxjs';
 import { retry } from 'radash';
-import { LogAsyncMethod } from 'src/app/infrastructure/logging';
+import { LogAsyncMethod } from '../../infrastructure/logging';
 
 export abstract class FlightService {
   protected logger: Logger;

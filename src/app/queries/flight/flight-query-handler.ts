@@ -2,9 +2,9 @@ import { LogAsyncMethod } from '../../infrastructure/logging';
 import { CACHE_MANAGER, Inject, Logger } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { FlightQuery } from './flight-query';
-import { Flight } from 'src/app/domain/flight-service/flight-service-response.interface';
+import { Flight } from '../../domain/flight-service/flight-service-response.interface';
 import { Cache } from 'cache-manager';
-import { FlightIntervalService } from 'src/app/tasks/flight-interval.service';
+import { FlightIntervalService } from '../../tasks/flight-interval.service';
 
 @QueryHandler(FlightQuery)
 export class FlightQueryHandler implements IQueryHandler<FlightQuery> {
@@ -19,7 +19,7 @@ export class FlightQueryHandler implements IQueryHandler<FlightQuery> {
 
   @LogAsyncMethod
   async execute(query: FlightQuery): Promise<Flight[]> {
-    let flightData = await this._cacheManager.store.get<Flight[]>(
+    let flightData = await this._cacheManager.get<Flight[]>(
       'flight-data-all-services',
     );
 

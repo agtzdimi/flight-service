@@ -1,28 +1,29 @@
-import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { FlightRegistryService } from '../domain/flight-service/services/flight-registry-service';
-import { Cache } from 'cache-manager';
 import { Flight } from '../domain/flight-service/flight-service-response.interface';
 import { parallel } from 'radash';
 import { RedisService } from '../infrastructure/redis';
 
 @Injectable()
-export class FlightIntervalService {
+export class FlightIntervalService implements OnApplicationBootstrap {
   logger: Logger;
   constructor(
-    @Inject(CACHE_MANAGER) private _cacheManager: Cache,
     private _flightRegistryService: FlightRegistryService,
     private _redisService: RedisService,
   ) {
     this.logger = new Logger(FlightIntervalService.name);
-    this.fetchFlightDataInterval();
+  }
+
+  async onApplicationBootstrap() {
+    await this.fetchFlightDataInterval();
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async fetchFlightDataInterval(): Promise<Flight[]> {
     const services = this._flightRegistryService.getServices();
     const flightData = await parallel(50, services, async (service) => {
-      return await service.fetchFlights();
+      return await service?.fetchFlights();
     });
     for (const index in services) {
       const flightResults = flightData[index];
