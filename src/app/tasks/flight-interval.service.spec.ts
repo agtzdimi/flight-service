@@ -22,7 +22,93 @@ beforeEach(async () => {
   secondFlightService = createMock();
 });
 
-test('fetchFlightDataInterval - returns empty array', async () => {
+test('fetchFlightDataInterval - returns 2 slices one of each service', async () => {
+  const mockResponse1 = [
+    {
+      slices: [
+        {
+          origin_name: 'Schonefeld',
+          destination_name: 'Stansted',
+          departure_date_time_utc: '2019-08-08T04:30:00.000Z',
+          arrival_date_time_utc: '2019-08-08T06:25:00.000Z',
+          flight_number: '144',
+          duration: 115,
+        },
+        {
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T05:35:00.000Z',
+          arrival_date_time_utc: '2019-08-10T07:35:00.000Z',
+          flight_number: '8542',
+          duration: 120,
+        },
+      ],
+      price: 129,
+    },
+  ];
+
+  const mockResponse2 = [
+    {
+      slices: [
+        {
+          origin_name: 'Schonefeld',
+          destination_name: 'Stansted',
+          departure_date_time_utc: '2019-08-08T04:30:00.000Z',
+          arrival_date_time_utc: '2019-08-08T06:25:00.000Z',
+          flight_number: '142',
+          duration: 115,
+        },
+        {
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T05:35:00.000Z',
+          arrival_date_time_utc: '2019-08-10T07:35:00.000Z',
+          flight_number: '8541',
+          duration: 120,
+        },
+      ],
+      price: 129,
+    },
+  ];
+  const services: FlightService[] = [firstFlightService, secondFlightService];
+
+  const flightRegistryServiceSpy = jest
+    .spyOn(flightRegistryService, 'getServices')
+    .mockReturnValueOnce(services);
+
+  const firstFlightServiceSpy = jest
+    .spyOn(firstFlightService, 'fetchFlights')
+    .mockResolvedValueOnce(mockResponse1);
+
+  const secondFlightServiceSpy = jest
+    .spyOn(secondFlightService, 'fetchFlights')
+    .mockResolvedValueOnce(mockResponse2);
+
+  const redisServiceSetSpy = jest
+    .spyOn(redisService, 'setRedisKey')
+    .mockResolvedValueOnce(undefined) // First on first flight service
+    .mockResolvedValueOnce(undefined) // Second on second flight service
+    .mockResolvedValueOnce(undefined); // Third on final data
+
+  const redisServiceGetSpy = jest
+    .spyOn(redisService, 'getRedisKey')
+    .mockResolvedValueOnce(mockResponse1) // First on first flight service
+    .mockResolvedValueOnce(mockResponse2); // Second on second flight service
+
+  const returned = await flightIntervalService.fetchFlightDataInterval();
+
+  expect(flightRegistryServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(firstFlightServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(secondFlightServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(redisServiceSetSpy).toHaveBeenCalledTimes(3);
+  expect(redisServiceGetSpy).toHaveBeenCalledTimes(0);
+  expect(returned).toEqual([...mockResponse1, ...mockResponse2]);
+});
+
+test('fetchFlightDataInterval - returns 1 slice removing the duplication', async () => {
   const mockResponse1 = [
     {
       slices: [
@@ -105,5 +191,130 @@ test('fetchFlightDataInterval - returns empty array', async () => {
 
   expect(redisServiceSetSpy).toHaveBeenCalledTimes(3);
   expect(redisServiceGetSpy).toHaveBeenCalledTimes(0);
+  expect(returned).toEqual([...mockResponse1]);
+});
+
+test('fetchFlightDataInterval - returns empty array having invalid responses', async () => {
+  const services: FlightService[] = [firstFlightService, secondFlightService];
+
+  const flightRegistryServiceSpy = jest
+    .spyOn(flightRegistryService, 'getServices')
+    .mockReturnValueOnce(services);
+
+  const firstFlightServiceSpy = jest
+    .spyOn(firstFlightService, 'fetchFlights')
+    .mockResolvedValueOnce([]);
+
+  const secondFlightServiceSpy = jest
+    .spyOn(secondFlightService, 'fetchFlights')
+    .mockResolvedValueOnce([]);
+
+  const redisServiceSetSpy = jest
+    .spyOn(redisService, 'setRedisKey')
+    .mockResolvedValueOnce(undefined) // First on first flight service
+    .mockResolvedValueOnce(undefined) // Second on second flight service
+    .mockResolvedValueOnce(undefined); // Third on final data
+
+  const redisServiceGetSpy = jest
+    .spyOn(redisService, 'getRedisKey')
+    .mockResolvedValueOnce([]) // First on first flight service
+    .mockResolvedValueOnce([]); // Second on second flight service
+
+  const returned = await flightIntervalService.fetchFlightDataInterval();
+
+  expect(flightRegistryServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(firstFlightServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(secondFlightServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(redisServiceSetSpy).toHaveBeenCalledTimes(1);
+  expect(redisServiceGetSpy).toHaveBeenCalledTimes(2);
+  expect(returned).toEqual([]);
+});
+
+test('fetchFlightDataInterval - returns 2 slices one of each service', async () => {
+  const mockResponse1 = [
+    {
+      slices: [
+        {
+          origin_name: 'Schonefeld',
+          destination_name: 'Stansted',
+          departure_date_time_utc: '2019-08-08T04:30:00.000Z',
+          arrival_date_time_utc: '2019-08-08T06:25:00.000Z',
+          flight_number: '144',
+          duration: 115,
+        },
+        {
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T05:35:00.000Z',
+          arrival_date_time_utc: '2019-08-10T07:35:00.000Z',
+          flight_number: '8542',
+          duration: 120,
+        },
+      ],
+      price: 129,
+    },
+  ];
+
+  const mockResponse2 = [
+    {
+      slices: [
+        {
+          origin_name: 'Schonefeld',
+          destination_name: 'Stansted',
+          departure_date_time_utc: '2019-08-08T04:30:00.000Z',
+          arrival_date_time_utc: '2019-08-08T06:25:00.000Z',
+          flight_number: '142',
+          duration: 115,
+        },
+        {
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T05:35:00.000Z',
+          arrival_date_time_utc: '2019-08-10T07:35:00.000Z',
+          flight_number: '8541',
+          duration: 120,
+        },
+      ],
+      price: 129,
+    },
+  ];
+  const services: FlightService[] = [firstFlightService, secondFlightService];
+
+  const flightRegistryServiceSpy = jest
+    .spyOn(flightRegistryService, 'getServices')
+    .mockReturnValueOnce(services);
+
+  const firstFlightServiceSpy = jest
+    .spyOn(firstFlightService, 'fetchFlights')
+    .mockResolvedValueOnce([]);
+
+  const secondFlightServiceSpy = jest
+    .spyOn(secondFlightService, 'fetchFlights')
+    .mockResolvedValueOnce([]);
+
+  const redisServiceSetSpy = jest
+    .spyOn(redisService, 'setRedisKey')
+    .mockResolvedValueOnce(undefined) // First on first flight service
+    .mockResolvedValueOnce(undefined) // Second on second flight service
+    .mockResolvedValueOnce(undefined); // Third on final data
+
+  const redisServiceGetSpy = jest
+    .spyOn(redisService, 'getRedisKey')
+    .mockResolvedValueOnce(mockResponse1) // First on first flight service
+    .mockResolvedValueOnce(mockResponse2); // Second on second flight service
+
+  const returned = await flightIntervalService.fetchFlightDataInterval();
+
+  expect(flightRegistryServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(firstFlightServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(secondFlightServiceSpy).toHaveBeenCalledTimes(1);
+
+  expect(redisServiceSetSpy).toHaveBeenCalledTimes(1);
+  expect(redisServiceGetSpy).toHaveBeenCalledTimes(2);
   expect(returned).toEqual([...mockResponse1, ...mockResponse2]);
 });
