@@ -65,7 +65,7 @@ As the services are not stable, and we may not get back data from the services. 
 - infrastructure:
   - Contains the redis services to set / get a key and a logging service, to log the async methods when they finish with their duration
 - domain:
-  - Kind use a DDD (domain driven design), it contains the flight services to retrieve the data, and an abstract class to bind certain variables (name / uri) and maybe in the future some functions. The services classes extends the abstract class and can utilize its methods.
+  - Kinda use a DDD (domain driven design), it contains the flight services to retrieve the data, and an abstract class to bind certain variables (name / uri) and maybe in the future some functions. The services classes extends the abstract class and can utilize its methods.
   - It also contains a validator so we can be sure that the received data from the services did not change data model
   - It contains a registry service which exposes to other modules an instance of the available services, so it can be dynamic and if a new service is implemented the class will extend the abstract one and added to the registry so all parts of the app will automatically updated.
 
