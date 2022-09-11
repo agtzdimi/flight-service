@@ -56,14 +56,14 @@ As the services are not stable, and we may not get back data from the services. 
  - If for one hour we cannot fetch data from that service (ttl: 60min), then an empty result will be provided from cache
 
 ### Code structure
- - tasks:
+- tasks:
   - It contains the cron scheduled task which can be also used as a fallback to the endpoint call if Redis is down for example
- - rest:
+- rest:
   - Contains all the controllers i.e REST endpoints
- - queries: As we are using CQRS there is a query bus from NestJS to execute all the Queries binded from the controllers. In our case it contains the flight query handler, and an empty Query as there are no variables in the GET request which may change
- - infrastructure:
+- queries: As we are using CQRS there is a query bus from NestJS to execute all the Queries binded from the controllers. In our case it contains the flight query handler, and an empty Query as there are no variables in the GET request which may change
+- infrastructure:
   - Contains the redis services to set / get a key and a logging service, to log the async methods when they finish with their duration
- - domain:
+- domain:
   - Kind use a DDD (domain driven design), it contains the flight services to retrieve the data, and an abstract class to bind certain variables (name / uri) and maybe in the future some functions. The services classes extends the abstract class and can utilize its methods.
   - It also contains a validator so we can be sure that the received data from the services did not change data model
   - It contains a registry service which exposes to other modules an instance of the available services, so it can be dynamic and if a new service is implemented the class will extend the abstract one and added to the registry so all parts of the app will automatically updated.
