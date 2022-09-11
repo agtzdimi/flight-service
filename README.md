@@ -71,8 +71,8 @@ As the services are not stable, and we may not get back data from the services. 
 
 ### Prerequisites
 
-Docker should installed when using the docker-compose binary.
-if Docker is not utilized, NodeJS v16 was used for the development.
+Docker should installed to utilize docker-compose binary.
+if Docker is not utilized, NodeJS v16 can be used (version used at the development).
 
 ### Installation steps
 
@@ -88,11 +88,14 @@ REDIS_PORT=6379
 Without Redis & Docker
 - `git clone https://github.com/agtzdimi/flight-service` (Or download the zip file from the repo)
 - At the project root run `npm i`
+- At the `app.module.ts` you can exclude the redis config as it will work with NestJS cache manager else provide a valid Redis config in `.env`
 - To start the application: `npm start`
 
 With Redis & Docker
 - `git clone https://github.com/agtzdimi/flight-service` (Or download the zip file from the repo)
-- At the project root run `docker-compose up`
+- At the project root run:
+  - `npm i`
+  - `docker-compose up`
 
 ## Acknowledgments
 
