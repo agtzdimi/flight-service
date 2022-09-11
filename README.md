@@ -15,33 +15,34 @@ endpoints and features
 
 ## Structure
 
-.
-├── app.module.ts
-├── domain
-│   └── flight-service
-│       ├── flight-response-validator.ts
-│       ├── flight-service-response.interface.ts
-│       ├── flight-service.abstract.ts
-│       ├── flight.module.ts
-│       └── services
-│           ├── first-flight-service.ts
-│           ├── flight-registry-service.ts
-│           └── second-flight-service.ts
-├── infrastructure
-│   ├── infrastructure.module.ts
-│   ├── logging.ts
-│   └── redis.ts
+.<br />
+├── app.module.ts<br />
+├── domain<br />
+│   └── flight-service<br />
+│       ├── flight-response-validator.ts<br />
+│       ├── flight-service-response.interface.ts<br />
+│       ├── flight-service.abstract.ts<br />
+│       ├── flight.module.ts<br />
+│       └── services<br />
+│           ├── first-flight-service.ts<br />
+│           ├── flight-registry-service.ts<br />
+│           └── second-flight-service.ts<br />
+├── infrastructure<br />
+│   ├── infrastructure.module.ts<br />
+│   ├── logging.ts<br />
+│   └── redis.ts<br />
 ├── queries
 │   ├── flight
-│   │   ├── flight-query-handler.ts
-│   │   └── flight-query.ts
-│   └── queries.module.ts
-├── rest
-│   ├── flight-controller.ts
-│   └── rest.module.ts
+│   │   ├── flight-query-handler.ts<br />
+│   │   └── flight-query.ts<br />
+│   └── queries.module.ts<br />
+├── rest<br />
+│   ├── flight-controller.ts<br />
+│   └── rest.module.ts<br />
 └── tasks
-    ├── flight-interval.service.ts
-    └── tasks.module.ts
+    ├── flight-interval.service.ts<br />
+    └── tasks.module.ts<br />
+
 ## Approach
 
 ### General approach
