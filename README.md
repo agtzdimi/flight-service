@@ -78,6 +78,13 @@ if Docker is not utilized, NodeJS v16 was used for the development.
 
 To install the application the following steps should be executed:
 
+Add `.env` file
+Example:
+```
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
 Without Redis & Docker
 - `git clone https://github.com/agtzdimi/flight-service` (Or download the zip file from the repo)
 - At the project root run `npm i`
