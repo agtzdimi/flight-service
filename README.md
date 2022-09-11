@@ -1,73 +1,91 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Flight Services
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+The main idea of the project is to collect data from different flight services, concatenate them, remove duplicates
+and send them back to the requestor
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech stack
 
-## Description
+To create the single endpoint to retrieve the data from the flight services we created a backend service using the
+NestJS framework.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+In order to have really low response time, a caching mechanism was utilized (Redis / NestJS internal memory).
 
-## Installation
+CQRS was used (provided out of the box from NestJS) for the single endpoint as we want to separate Reads / Writes and be easily extensible for future
+endpoints and features
 
-```bash
-$ npm install
-```
+## Structure
 
-## Running the app
+.
+├── app.module.ts
+├── domain
+│   └── flight-service
+│       ├── flight-response-validator.ts
+│       ├── flight-service-response.interface.ts
+│       ├── flight-service.abstract.ts
+│       ├── flight.module.ts
+│       └── services
+│           ├── first-flight-service.ts
+│           ├── flight-registry-service.ts
+│           └── second-flight-service.ts
+├── infrastructure
+│   ├── infrastructure.module.ts
+│   ├── logging.ts
+│   └── redis.ts
+├── queries
+│   ├── flight
+│   │   ├── flight-query-handler.ts
+│   │   └── flight-query.ts
+│   └── queries.module.ts
+├── rest
+│   ├── flight-controller.ts
+│   └── rest.module.ts
+└── tasks
+    ├── flight-interval.service.ts
+    └── tasks.module.ts
+## Approach
 
-```bash
-# development
-$ npm run start
+### General approach
+On start-up of the application and every 5 minutes we gonna fetch data from each of the services using the NestJS cron scheduler.
 
-# watch mode
-$ npm run start:dev
+The data will be cached using the name of each service. After that we gonna concat the services data, remove duplicates
+and cache the result as well. The data will have a 60 min TTL as after that we cannot consider the data valid.
 
-# production mode
-$ npm run start:prod
-```
+As the services are not stable, and we may not get back data from the services. To tackle it:
+ - There is a 5 times retry with a 1 sec backoff
+ - If we still do not receive data, we look into the cached data of the service and use it.
+ - If for one hour we cannot fetch data from that service (ttl: 60min), then an empty result will be provided from cache
 
-## Test
+### Code structure
+ - tasks:
+  - It contains the cron scheduled task which can be also used as a fallback to the endpoint call if Redis is down for example
+ - rest:
+  - Contains all the controllers i.e REST endpoints
+ - queries: As we are using CQRS there is a query bus from NestJS to execute all the Queries binded from the controllers. In our case it contains the flight query handler, and an empty Query as there are no variables in the GET request which may change
+ - infrastructure:
+  - Contains the redis services to set / get a key and a logging service, to log the async methods when they finish with their duration
+ - domain:
+  - Kind use a DDD (domain driven design), it contains the flight services to retrieve the data, and an abstract class to bind certain variables (name / uri) and maybe in the future some functions. The services classes extends the abstract class and can utilize its methods.
+  - It also contains a validator so we can be sure that the received data from the services did not change data model
+  - It contains a registry service which exposes to other modules an instance of the available services, so it can be dynamic and if a new service is implemented the class will extend the abstract one and added to the registry so all parts of the app will automatically updated.
 
-```bash
-# unit tests
-$ npm run test
+### Prerequisites
 
-# e2e tests
-$ npm run test:e2e
+Docker should installed when using the docker-compose binary.
+if Docker is not utilized, NodeJS v16 was used for the development.
 
-# test coverage
-$ npm run test:cov
-```
+### Installation steps
 
-## Support
+To install the application the following steps should be executed:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Without Redis & Docker
+- `git clone https://github.com/agtzdimi/flight-service` (Or download the zip file from the repo)
+- At the project root run `npm i`
+- To start the application: `npm start`
 
-## Stay in touch
+With Redis & Docker
+- `git clone https://github.com/agtzdimi/flight-service` (Or download the zip file from the repo)
+- At the project root run `docker-compose up`
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Acknowledgments
 
-## License
-
-Nest is [MIT licensed](LICENSE).
+- NestJS Team for the awesome free framework [NestJS](https://nestjs.com/)
